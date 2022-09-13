@@ -23,7 +23,13 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home:ShoppingList(),
+      home: ShoppingList(
+        items: [
+          Item(id: '1', name: 'milk'),
+          Item(id: '2', name: 'egg'),
+          Item(id: '3', name: 'meat'),
+        ],
+      ),
     );
   }
 }
@@ -35,22 +41,26 @@ class Item {
 }
 
 class ShoppingList extends StatefulWidget {
-  const ShoppingList({Key? key}) : super(key: key);
+  // const ShoppingList({Key? key, required this.items}) : super(key: key);
+  const ShoppingList({required this.items, super.key});
+  final List<Item> items;
 
   @override
-  State<StatefulWidget> createState() {
-     return _ShoppingListState();
+  State<ShoppingList> createState() {
+    return _ShoppingListState();
   }
 }
 
-class _ShoppingListState extends State<ShoppingList>{
+class _ShoppingListState extends State<ShoppingList> {
 
-  final Item _shoppingItem  = Item(id: '1', name: 'milk');
-  bool _isClick = false;
-
-void handleClick(){
+  final List<Item> _shoppingListItem = [];
+  void handleClick(bool inCart, Item item) {
     setState(() {
-      _isClick = !_isClick;
+      if (inCart) {
+        _shoppingListItem.remove(item);
+      } else {
+        _shoppingListItem.add(item);
+      }
     });
   }
 
@@ -58,24 +68,23 @@ void handleClick(){
   Widget build(BuildContext context) {
     // TODO: implement build
     return Scaffold(
-      appBar: AppBar(title: Text("Shopping Cart App"),),
-      body: ListView(
-        children: [
-          ListItem(
-            item: _shoppingItem,
-            inCart: _isClick,
-            callback: handleClick,
-          )
-        ],
+      appBar: AppBar(
+        title: Text("Shopping Cart App"),
       ),
+      body: ListView.builder(
+        itemCount: widget.items.length,
+        itemBuilder: (BuildContext context, int index) {
+        return ListItem(
+          item: widget.items[index],
+          inCart: _shoppingListItem.contains(widget.items[index]),
+          callback: handleClick,
+        );
+      }),
     );
   }
-
 }
 
-
-
-typedef CartChangedCallback = Function();
+typedef CartChangedCallback = Function(bool inCart, Item item);
 
 //用此class 決定畫面要如何顯示。 注意 inCart、tap Function 都是final。 其原因就是他只負責抓到別人給的值，然後顯示或是執行。
 class ListItem extends StatelessWidget {
@@ -108,7 +117,7 @@ class ListItem extends StatelessWidget {
     // TODO: implement build
     return ListTile(
       onTap: () {
-        callback();
+        callback(inCart,item);
       },
       leading: CircleAvatar(
         backgroundColor: _getColor(context),
